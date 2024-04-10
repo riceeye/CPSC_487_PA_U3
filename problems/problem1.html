@@ -20,7 +20,7 @@
 </head>
 <body>
 <script type="module">
-    import {ThreeEngine} from "../js/utils/utils_three.js";
+    import {ThreeEngine, get_default_lil_gui, refresh_displays} from "../js/utils/utils_three.js";
 
     // todo: create a visualization that demonstrates your knowledge of displacement-based
     // todo: distance over SE(3).  Note that this will use your logarithm solution from PS_U3,
@@ -69,7 +69,68 @@
         return adjugate;
     }
 
+    let engine = ThreeEngine.new_default_3d();
 
+    let settings = {
+        theta1_1: 0.0,
+        theta2_1: 0.0,
+        theta3_1: 0.0,
+        tx1: 0.0,
+        ty1: 0.0,
+        tz1: 0.0,
+        theta1_2: 0.0,
+        theta2_2: 0.0,
+        theta3_2: 0.0,
+        tx2: 0.0,
+        ty2: 0.0,
+        tz2: 0.0,
+        distance: '0.0'
+    }
+
+    let actions = {
+        reset1: function() {
+            settings.theta1_1 = 0.0;
+            settings.theta2_1 = 0.0;
+            settings.theta3_1 = 0.0;
+            settings.tx1 = 0.0;
+            settings.ty1 = 0.0;
+            settings.tz1 = 0.0;
+            refresh_displays(gui);
+        },
+        reset2: function() {
+            settings.theta1_2 = 0.0;
+            settings.theta2_2 = 0.0;
+            settings.theta3_2 = 0.0;
+            settings.tx2 = 0.0;
+            settings.ty2 = 0.0;
+            settings.tz2 = 0.0;
+            refresh_displays(gui);
+        }
+    };
+
+    let gui = get_default_lil_gui();
+    gui.add(settings, 'theta1_1', -2*Math.PI, 2*Math.PI);
+    gui.add(settings, 'theta2_1', -2*Math.PI, 2*Math.PI);
+    gui.add(settings, 'theta3_1', -2*Math.PI, 2*Math.PI);
+    gui.add(settings, 'tx1', -2, 2);
+    gui.add(settings, 'ty1', -2, 2);
+    gui.add(settings, 'tz1', -2, 2);
+    gui.add(actions, 'reset1').name('Reset Matrix 1');
+
+    gui.add(settings, 'theta1_2', -2*Math.PI, 2*Math.PI);
+    gui.add(settings, 'theta2_2', -2*Math.PI, 2*Math.PI);
+    gui.add(settings, 'theta3_2', -2*Math.PI, 2*Math.PI);
+    gui.add(settings, 'tx2', -2, 2);
+    gui.add(settings, 'ty2', -2, 2);
+    gui.add(settings, 'tz2', -2, 2);
+    gui.add(actions, 'reset2').name('Reset Matrix 2');
+
+    gui.add(settings, 'distance').name('disp based dis').disable();
+
+
+    engine.animation_loop(() => {
+
+    });
 
 </script>
 </body>
