@@ -21,10 +21,94 @@
 <body>
 <script type="module">
     import {get_default_lil_gui, ThreeEngine, refresh_displays} from "../js/utils/utils_three.js";
+    import {add_matrix_matrix, mul_matrix_scalar, dot_product, cross_product} from "../js/utils/utils_math.js";
 
     // todo: create a visualization that demonstrates your knowledge of quaternions.  This is intentionally
     // todo: open-ended.  Be as creative as you want, or feel free to recreate any of the visualizations
     // todo: found in Section 3.3.
+
+    let engine = ThreeEngine.new_default_3d();
+
+    let settings = {
+        theta: 0.0,
+        phi: 0.0,
+        r: 1.0,
+        t: 0
+    }
+
+    let actions = {
+        reset: function() {
+            settings.theta = 0.0;
+            settings.phi = 0.0;
+            settings.r = 1.0;
+            settings.t = 0.0;
+            refresh_displays(gui);
+        }
+    };
+
+    let gui = get_default_lil_gui();
+
+    gui.add(settings, 'theta', -Math.PI, Math.PI);
+    gui.add(settings, 'phi', -Math.PI, Math.PI);
+    gui.add(settings, 'r', 0, 2*Math.PI);
+    gui.add(settings, 't', 0, 1);
+    gui.add(actions, 'reset').name('Reset');
+
+    // ADD MONKEYS
+    let idx0 = engine.add_suzanne_monkey_as_mesh_object(0x00eeff);
+    engine.toggle_mesh_object_visibility(idx0, false);
+    engine.set_mesh_object_wireframe_visibility(idx0, true);
+    let standard_points_1 = engine.get_local_vertex_positions_of_mesh_object(idx0);
+    let wireframe_points_1 = engine.get_local_vertex_positions_of_mesh_object_wireframe(idx0);
+    engine.update_vertex_positions_of_mesh_object(idx0, standard_points_1);
+    engine.update_vertex_positions_of_mesh_object_wireframe(idx0, wireframe_points_1);
+
+    let idx1 = engine.add_suzanne_monkey_as_mesh_object(0x00eeff);
+    engine.toggle_mesh_object_visibility(idx1, false);
+    engine.set_mesh_object_wireframe_visibility(idx1, true);
+    let standard_points_2 = engine.get_local_vertex_positions_of_mesh_object(idx1);
+    let wireframe_points_2 = engine.get_local_vertex_positions_of_mesh_object_wireframe(idx1);
+    engine.update_vertex_positions_of_mesh_object(idx1, standard_points_2);
+    engine.update_vertex_positions_of_mesh_object_wireframe(idx1, wireframe_points_2);
+
+    function h1_exponential(h, epsilon = 0.0001) {
+        let h_norm = Math.sqrt(Math.pow(h[0], 2) + Math.pow(h[1], 2) + Math.pow(h[2], 2));
+
+        if (h_norm < epsilon) {
+            return [1, [0, 0, 0]];
+        }
+        else {
+            return [Math.cos(h_norm), mul_matrix_scalar(h, Math.sin(h_norm)/h_norm)];
+        }
+    }
+
+    function H1_multiply(a, b) {
+        return [a[0]*b[0] - dot_product(a[1], b[1]),
+                add_matrix_matrix(add_matrix_matrix(mul_matrix_scalar(b[1], a[0]), mul_matrix_scalar(a[1], b[0])), cross_product(a[1], b[1]));
+    }
+
+    function H1_map(H, p) {
+        let H_conj = [H[0], mul_matrix_scalar(H[1], -1)];
+        let p_h = [0, p];
+        let quat_res = H1_multiply(H1_multiply(H, p_h), H_conj);
+        return quat_res[1];
+    }
+
+    engine.animation_loop(() => {
+        let h1 = mul_matrix_scalar([Math.sin(settings.theta) * Math.cos(settings.phi),
+            Math.sin(settings.theta) * Math.sin(settings.phi),
+            Math.cos(settings.theta)], settings.r / 2);
+
+        let h2 = mul_matrix_scalar([Math.sin(settings.theta) * Math.cos(settings.phi),
+            Math.sin(settings.theta) * Math.sin(settings.phi),
+            Math.cos(settings.theta)], -(2 * Math.PI - settings.r) / 2);
+
+        engine.draw_debug_vector([0, -2, 0], add_matrix_matrix(h1, [0, -2, 0]));
+        engine.draw_debug_vector([0, 2, 0], add_matrix_matrix(h2, [0, 2, 0]));
+
+        let H1 = h1_exponential(h1);
+        let H2 = h1_exponential(h2);
+    }
 
 </script>
 </body>
