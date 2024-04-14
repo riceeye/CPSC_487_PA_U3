@@ -60,16 +60,12 @@
     engine.set_mesh_object_wireframe_visibility(idx0, true);
     let standard_points_1 = engine.get_local_vertex_positions_of_mesh_object(idx0);
     let wireframe_points_1 = engine.get_local_vertex_positions_of_mesh_object_wireframe(idx0);
-    engine.update_vertex_positions_of_mesh_object(idx0, standard_points_1);
-    engine.update_vertex_positions_of_mesh_object_wireframe(idx0, wireframe_points_1);
 
     let idx1 = engine.add_suzanne_monkey_as_mesh_object(0x00eeff);
     engine.toggle_mesh_object_visibility(idx1, false);
     engine.set_mesh_object_wireframe_visibility(idx1, true);
     let standard_points_2 = engine.get_local_vertex_positions_of_mesh_object(idx1);
     let wireframe_points_2 = engine.get_local_vertex_positions_of_mesh_object_wireframe(idx1);
-    engine.update_vertex_positions_of_mesh_object(idx1, standard_points_2);
-    engine.update_vertex_positions_of_mesh_object_wireframe(idx1, wireframe_points_2);
 
     function h1_exponential(h, epsilon = 0.0001) {
         let h_norm = Math.sqrt(Math.pow(h[0], 2) + Math.pow(h[1], 2) + Math.pow(h[2], 2));
@@ -84,7 +80,7 @@
 
     function H1_multiply(a, b) {
         return [a[0]*b[0] - dot_product(a[1], b[1]),
-                add_matrix_matrix(add_matrix_matrix(mul_matrix_scalar(b[1], a[0]), mul_matrix_scalar(a[1], b[0])), cross_product(a[1], b[1]));
+                add_matrix_matrix(add_matrix_matrix(mul_matrix_scalar(b[1], a[0]), mul_matrix_scalar(a[1], b[0])), cross_product(a[1], b[1]))];
     }
 
     function H1_map(H, p) {
@@ -95,20 +91,33 @@
     }
 
     engine.animation_loop(() => {
-        let h1 = mul_matrix_scalar([Math.sin(settings.theta) * Math.cos(settings.phi),
-            Math.sin(settings.theta) * Math.sin(settings.phi),
-            Math.cos(settings.theta)], settings.r / 2);
+        let h1_full = mul_matrix_scalar([Math.sin(settings.phi) * Math.cos(settings.theta),
+            Math.sin(settings.phi) * Math.sin(settings.theta),
+            Math.cos(settings.phi)], settings.r / 2);
 
-        let h2 = mul_matrix_scalar([Math.sin(settings.theta) * Math.cos(settings.phi),
-            Math.sin(settings.theta) * Math.sin(settings.phi),
-            Math.cos(settings.theta)], -(2 * Math.PI - settings.r) / 2);
+        let h2_full = mul_matrix_scalar([Math.sin(settings.phi) * Math.cos(settings.theta),
+            Math.sin(settings.phi) * Math.sin(settings.theta),
+            Math.cos(settings.phi)], -(2 * Math.PI - settings.r) / 2);
 
-        engine.draw_debug_vector([0, -2, 0], add_matrix_matrix(h1, [0, -2, 0]));
-        engine.draw_debug_vector([0, 2, 0], add_matrix_matrix(h2, [0, 2, 0]));
+        engine.draw_debug_vector([0, -2, 0], add_matrix_matrix(h1_full, [0, -2, 0]));
+        engine.draw_debug_vector([0, 2, 0], add_matrix_matrix(h2_full, [0, 2, 0]));
 
-        let H1 = h1_exponential(h1);
-        let H2 = h1_exponential(h2);
-    }
+        let h1_t = mul_matrix_scalar(h1_full, settings.t);
+        let h2_t = mul_matrix_scalar(h2_full, settings.t);
+
+        let H1 = h1_exponential(h1_t);
+        let H2 = h1_exponential(h2_t);
+
+        let new_standard_points_1 = standard_points_1.map(p => add_matrix_matrix(H1_map(H1, p), [0, -2, 0]));
+        let new_wireframe_points_1 = wireframe_points_1.map(p => add_matrix_matrix(H1_map(H1, p), [0, -2, 0]));
+        engine.update_vertex_positions_of_mesh_object(idx0, new_standard_points_1);
+        engine.update_vertex_positions_of_mesh_object_wireframe(idx0, new_wireframe_points_1);
+
+        let new_standard_points_2 = standard_points_2.map(p => add_matrix_matrix(H1_map(H2, p), [0, 2, 0]));
+        let new_wireframe_points_2 = wireframe_points_2.map(p => add_matrix_matrix(H1_map(H2, p), [0, 2, 0]));
+        engine.update_vertex_positions_of_mesh_object(idx1, new_standard_points_2);
+        engine.update_vertex_positions_of_mesh_object_wireframe(idx1, new_wireframe_points_2);
+    });
 
 </script>
 </body>
