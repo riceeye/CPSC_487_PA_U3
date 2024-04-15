@@ -235,7 +235,7 @@
         engine.draw_debug_vector(SE3_transform(m2, [0,0,0]), SE3_transform(m2, [0,1,0]), 0.035, undefined, 0x44aa44);
         engine.draw_debug_vector(SE3_transform(m2, [0,0,0]), SE3_transform(m2, [0,0,1]), 0.035, undefined, 0x4444aa);
 
-        settings.distance = SE3_distance(m1, m2).toString();
+        settings.distance = SE3_distance(m1, m2).toFixed(3).toString();
         refresh_displays(gui);
     });
 
